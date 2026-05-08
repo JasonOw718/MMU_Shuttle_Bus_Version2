@@ -8,8 +8,6 @@ import com.mmu.shuttle.backend.utils.StyleUtils;
 import com.mmu.shuttle.backend.utils.TimeUtils;
 import org.springframework.stereotype.Component;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +40,8 @@ public class RouteModelMapper {
 
             Schedule stationSchedule = (stationQueue != null) ? stationQueue.poll() : null;
 
-            return toStationDetailResponse(routeStation.getId(), station, stationSchedule, sequence);
+            return toStationDetailResponse(routeStation.getId(), station, stationSchedule, sequence,
+                    routeStation.getExclusiveTripTimes());
         }).toList();
 
         routeDetailResponse.setStationDetailResponse(stationDetailResponses);
@@ -52,22 +51,20 @@ public class RouteModelMapper {
         return routeDetailResponse;
     }
 
-    public StationDetailResponse toStationDetailResponse(Long routeStationId, Station station, Schedule schedule, int sequence) {
+    public StationDetailResponse toStationDetailResponse(Long routeStationId, Station station, Schedule schedule,
+            int sequence, List<String> exclusiveTripTimes) {
         StationDetailResponse stationDetailResponse = new StationDetailResponse();
         stationDetailResponse.setId(routeStationId);
-        stationDetailResponse.setName(station.getName());
+        String displayName = station.getName();
+        if (exclusiveTripTimes != null && !exclusiveTripTimes.isEmpty()) {
+            displayName += " (" + String.join(", ", exclusiveTripTimes) + " Only)";
+        }
+        stationDetailResponse.setName(displayName);
         stationDetailResponse.setSequence(sequence);
 
         LocationModel locationModel = new LocationModel();
         locationModel.setLatitude(station.getLatitude());
         locationModel.setLongitude(station.getLongitude());
-
-        String stationName = station.getName();
-        DayOfWeek today = LocalDate.now().getDayOfWeek();
-
-        if (("DTC".equals(stationName) || "STC".equals(stationName)) && today == DayOfWeek.FRIDAY) {
-            schedule.getTimeSlots().remove("2:20 PM");
-        }
 
         stationDetailResponse.setLocationModel(locationModel);
         String nextArrival = TimeUtils.findNextSlot(

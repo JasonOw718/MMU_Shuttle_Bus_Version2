@@ -33,14 +33,22 @@ const GoogleMap = ({ routeLine, activeBuses, stations }: GoogleMapProps) => {
         >
             {routeLine && routeLine.length > 0 && <MapPolyline path={routeLine} />}
 
-            {stations && stations.length > 0 && stations.map((station,index) => (
-                <AdvancedMarker
-                    key={`station-${station.id}`}
-                    position={station.location}
-                >
-                    <StationPin name={station.name} sequence={index} />
-                </AdvancedMarker>
-            ))}
+            {stations && stations.length > 0 && (() => {
+                const seen = new Set<string>();
+                return stations.map((station, index) => {
+                    const key = `${station.location.lat},${station.location.lng}`;
+                    if (seen.has(key)) return null;
+                    seen.add(key);
+                    return (
+                        <AdvancedMarker
+                            key={`station-${station.id}`}
+                            position={station.location}
+                        >
+                            <StationPin name={station.name} sequence={index} />
+                        </AdvancedMarker>
+                    );
+                });
+            })()}
 
             {activeBuses && activeBuses.length > 0 && activeBuses.map((bus, index) => (
                 <AdvancedMarker
@@ -48,7 +56,7 @@ const GoogleMap = ({ routeLine, activeBuses, stations }: GoogleMapProps) => {
                     position={bus.location}
                 >
                     <div>
-                        <BusIcon carPlate={bus.busPlate} color={bus.color}/>
+                        <BusIcon carPlate={bus.busPlate} color={bus.color} />
                     </div>
                 </AdvancedMarker>
             ))}

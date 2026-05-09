@@ -8,6 +8,8 @@ import com.mmu.shuttle.backend.utils.StyleUtils;
 import com.mmu.shuttle.backend.utils.TimeUtils;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -67,9 +69,14 @@ public class RouteModelMapper {
         locationModel.setLongitude(station.getLongitude());
 
         stationDetailResponse.setLocationModel(locationModel);
-        String nextArrival = TimeUtils.findNextSlot(
-                schedule.getTimeSlots()
-        );
+
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        String nextArrival = "";
+
+        if (today != DayOfWeek.SATURDAY && today != DayOfWeek.SUNDAY) {
+            nextArrival = TimeUtils.findNextSlot(schedule.getTimeSlots());
+        }
+
         stationDetailResponse.setNextBusArrivalTime(nextArrival);
 
         if(schedule != null){

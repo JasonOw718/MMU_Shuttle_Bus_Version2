@@ -15,6 +15,9 @@ public class AnnouncementModelMapper {
         announcementResponse.setPinned(announcement.isPinned());
         announcementResponse.setFileName(announcement.getFileName());
         announcementResponse.setCreatedAt(announcement.getCreatedAt());
+        if (announcement.getDriver() != null) {
+            announcementResponse.setBusPlate(announcement.getDriver().getBusPlate());
+        }
         return announcementResponse;
     }
 }

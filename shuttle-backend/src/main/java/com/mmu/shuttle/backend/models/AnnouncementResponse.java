@@ -19,4 +19,5 @@ public class AnnouncementResponse {
     private boolean isPinned;
     private String fileName;
     private LocalDateTime createdAt;
+    private String busPlate;
 }

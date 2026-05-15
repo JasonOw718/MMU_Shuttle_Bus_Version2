@@ -65,7 +65,8 @@ services:
       - "443:443"
     volumes:
       - ./nginx-prod.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /etc/nginx/ssl/origin.pem:/etc/ssl/certs/origin.pem:ro
+      - /etc/nginx/ssl/origin.key:/etc/ssl/private/origin.key:ro
     depends_on:
       - shuttle-backend
 

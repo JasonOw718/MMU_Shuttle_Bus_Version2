@@ -36,7 +36,7 @@ const List<AnnouncementPreset> announcementPresets = [
   AnnouncementPreset(
     key: 'bus_breakdown',
     label: 'Bus Breakdown',
-    icon: Icons.build_outlined,
+  icon: Icons.build_outlined,
     title: 'Bus Breakdown',
     description:
         'The shuttle bus has experienced a breakdown. We are working on a replacement and apologise for the inconvenience.',

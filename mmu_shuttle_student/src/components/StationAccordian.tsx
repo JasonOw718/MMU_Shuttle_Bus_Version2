@@ -45,7 +45,7 @@ const StationAccordian = ({ stations, activeBuses, isLoading, isError, errorMess
 
     return (
         <div className={`w-full h-full pt-5 pb-24 pr-6 md:py-6 md:pr-8 transition-all duration-300 bg-white font-sans ${hasActiveBuses ? 'pl-16 md:pl-24' : 'pl-6 md:pl-8'}`}>
-            <h2 className="text-[20px] md:text-[22px] font-bold text-slate-900 mb-8 tracking-tight">Stations</h2>
+            <h2 className="text-[20px] md:text-[22px] font-bold text-slate-900 mb-8 tracking-tight">Upcoming Stops</h2>
 
             <div className="relative ml-10 md:ml-12 mt-4">
                 <div className="flex flex-col">

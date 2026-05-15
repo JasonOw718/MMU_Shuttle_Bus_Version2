@@ -10,10 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -73,15 +70,28 @@ public class RouteModelMapper {
         DayOfWeek today = LocalDate.now().getDayOfWeek();
         String nextArrival = "";
 
-        if (today != DayOfWeek.SATURDAY && today != DayOfWeek.SUNDAY) {
-            nextArrival = TimeUtils.findNextSlot(schedule.getTimeSlots());
+        if (schedule != null && schedule.getTimeSlots() != null) {
+            final List<String> ONE_PM_SLOTS = Arrays.asList("13:00 PM", "13:05 PM", "13:10 PM");
+            final String TWO_THIRTY_PM_SLOT = "14:30 PM";
+
+            List<String> filteredSlots = schedule.getTimeSlots().stream()
+                    .filter(slot -> {
+                        if (today == DayOfWeek.FRIDAY) {
+                            return !ONE_PM_SLOTS.contains(slot);
+                        } else {
+                            return !slot.equals(TWO_THIRTY_PM_SLOT);
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            if (today != DayOfWeek.SATURDAY && today != DayOfWeek.SUNDAY) {
+                nextArrival = TimeUtils.findNextSlot(filteredSlots);
+            }
+
+            stationDetailResponse.setSchedules(filteredSlots);
         }
 
         stationDetailResponse.setNextBusArrivalTime(nextArrival);
-
-        if(schedule != null){
-            stationDetailResponse.setSchedules(schedule.getTimeSlots());
-        }
 
         return stationDetailResponse;
     }

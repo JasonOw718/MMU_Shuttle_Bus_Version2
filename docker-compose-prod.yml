@@ -51,15 +51,9 @@ services:
       - postgres-db
 
   nginx:
-    build:
-      context: ./mmu_shuttle_student
-      dockerfile: Dockerfile
-      args:
-        - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
-        - VITE_GOOGLE_MAPS_ID=${VITE_GOOGLE_MAPS_ID}
-        - VITE_API_URL=${VITE_API_URL}
-        - VITE_WEB_SOCKET_URL=${VITE_WEB_SOCKET_URL}
+    image: nginx:alpine
     container_name: nginx
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"

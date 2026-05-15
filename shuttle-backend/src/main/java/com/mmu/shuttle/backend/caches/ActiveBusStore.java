@@ -20,14 +20,24 @@ public class ActiveBusStore {
     private final Map<Long, Integer> routeTicketDispenser = new ConcurrentHashMap<>();
     private final AtomicLong currentActiveBusId = new AtomicLong(1L);
 
-    public ActiveBusModel addActiveBus(Long routeId, String busPlate, double longitude, double latitude, Long nextRouteStationId) {
+    public ActiveBusModel addActiveBus(Long routeId, String busPlate, Long driverId, Long vehicleId, double longitude,
+            double latitude,
+            Long nextRouteStationId) {
 
         boolean busExists = activeBuses.values().stream()
                 .flatMap(List::stream)
-                .anyMatch(bus ->busPlate.equalsIgnoreCase(bus.getBusPlate()));
+                .anyMatch(bus -> vehicleId.equals(bus.getVehicleId()));
 
         if (busExists) {
-            throw new DuplicateResourceException("Bus with plate " + busPlate + " is already in a ride.");
+            throw new DuplicateResourceException("Vehicle with id " + vehicleId + " is already in a ride.");
+        }
+
+        boolean driverExists = activeBuses.values().stream()
+                .flatMap(List::stream)
+                .anyMatch(bus -> driverId.equals(bus.getDriverId()));
+
+        if (driverExists) {
+            throw new DuplicateResourceException("Driver with id " + driverId + " is already in a ride.");
         }
 
         int myTicket = routeTicketDispenser.compute(routeId, (key, currentValue) ->
@@ -38,6 +48,8 @@ public class ActiveBusStore {
         Long activeBusId = currentActiveBusId.getAndIncrement();
         activeBusModel.setId(activeBusId);
         activeBusModel.setBusPlate(busPlate);
+        activeBusModel.setDriverId(driverId);
+        activeBusModel.setVehicleId(vehicleId);
         activeBusModel.setRouteId(routeId);
         activeBusModel.setNextBusRouteStationId(nextRouteStationId);
         activeBusModel.setNextSequence(1);
@@ -55,7 +67,7 @@ public class ActiveBusStore {
         return activeBusModel;
     }
 
-    public ActiveBusModel removeActiveBus(Long routeId, String busPlate) {
+    public ActiveBusModel removeActiveBus(Long routeId, Long driverId) {
         List<ActiveBusModel> activeBusModels = activeBuses.get(routeId);
 
         if (activeBusModels == null) {
@@ -63,7 +75,7 @@ public class ActiveBusStore {
         }
 
         ActiveBusModel busToRemove = activeBusModels.stream()
-                .filter(bus -> busPlate.equalsIgnoreCase(bus.getBusPlate()))
+                .filter(bus -> driverId.equals(bus.getDriverId()))
                 .findFirst()
                 .orElse(null);
 
@@ -84,12 +96,12 @@ public class ActiveBusStore {
         return activeBuses.getOrDefault(routeId, new ArrayList<>());
     }
 
-    public ActiveBusModel updateBusLocation(Long routeId, String busPlate, LocationModel newLocation) {
+    public ActiveBusModel updateBusLocation(Long routeId, Long driverId, LocationModel newLocation) {
         List<ActiveBusModel> activeBusModels = activeBuses.get(routeId);
 
         if (activeBusModels != null && !activeBusModels.isEmpty()) {
             for (ActiveBusModel bus : activeBusModels) {
-                if (bus.getBusPlate().equalsIgnoreCase(busPlate)) {
+                if (driverId.equals(bus.getDriverId())) {
                     bus.setLocation(newLocation);
                     return bus;
                 }
@@ -99,10 +111,10 @@ public class ActiveBusStore {
         return null;
     }
 
-    public ActiveBusModel getActiveBusByBusPlate(String busPlate) {
+    public ActiveBusModel getActiveBusByDriverId(Long driverId) {
         return activeBuses.values().stream()
                 .flatMap(List::stream)
-                .filter(bus -> busPlate.equals(bus.getBusPlate()))
+                .filter(bus -> driverId.equals(bus.getDriverId()))
                 .findFirst()
                 .orElse(null);
     }

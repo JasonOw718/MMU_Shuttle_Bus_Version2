@@ -20,7 +20,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         DriverDetail driverDetail = new DriverDetail();
         driverDetail.setId(driver.getId());
         driverDetail.setEmail(driver.getEmail());
-        driverDetail.setBusPlate(driver.getBusPlate());
         driverDetail.setPassword(driver.getPassword());
         return driverDetail;
     }

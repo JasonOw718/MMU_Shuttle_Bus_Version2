@@ -28,6 +28,10 @@ public class Announcement {
 
     private String fileName;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
+
     @CreationTimestamp
     @Column(updatable = false,nullable = false)
     private LocalDateTime createdAt;

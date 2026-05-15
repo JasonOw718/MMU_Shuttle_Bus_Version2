@@ -3,6 +3,7 @@ package com.mmu.shuttle.backend.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mmu.shuttle.backend.exceptions.FileException;
+import com.mmu.shuttle.backend.models.AnnouncementCategoryResponse;
 import com.mmu.shuttle.backend.models.AnnouncementRequest;
 import com.mmu.shuttle.backend.models.AnnouncementResponse;
 import com.mmu.shuttle.backend.services.AnnouncementService;
@@ -31,6 +32,11 @@ public class AnnouncementController {
     @GetMapping("/all")
     public ResponseEntity<List<AnnouncementResponse>> getAllAnnouncements() {
         return new ResponseEntity<>(announcementService.getAllAnnouncements(), HttpStatus.OK);
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<AnnouncementCategoryResponse>> getAllAnnouncementCategories() {
+        return new ResponseEntity<>(announcementService.getAllAnnouncementCategories(), HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('DRIVER')")

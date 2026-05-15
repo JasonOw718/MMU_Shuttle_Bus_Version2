@@ -16,7 +16,6 @@ import java.util.List;
 public class DriverDetail implements UserDetails {
     private Long id;
     private String email;
-    private String busPlate;
     private String password;
 
     @Override

@@ -21,4 +21,6 @@ public class AnnouncementRequest {
 
     @JsonProperty("isPinned")
     private boolean isPinned;
+
+    private Long vehicleId;
 }

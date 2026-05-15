@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class DriverModel {
+public class AnnouncementCategoryResponse {
     private Long id;
-    private String email;
+    private String title;
+    private String description;
 }

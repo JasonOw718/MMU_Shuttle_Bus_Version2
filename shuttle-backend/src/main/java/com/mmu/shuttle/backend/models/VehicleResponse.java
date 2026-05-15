@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class DriverModel {
+public class VehicleResponse {
     private Long id;
-    private String email;
+    private String busPlate;
 }

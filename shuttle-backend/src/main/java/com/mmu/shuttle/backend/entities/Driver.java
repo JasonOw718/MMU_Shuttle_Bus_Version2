@@ -23,9 +23,6 @@ public class Driver {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String busPlate;
-
     @OneToMany(mappedBy = "driver")
     private List<Announcement> announcements = new ArrayList<>();
 

@@ -2,12 +2,17 @@ package com.mmu.shuttle.backend.services;
 
 import com.mmu.shuttle.backend.entities.Announcement;
 import com.mmu.shuttle.backend.entities.Driver;
+import com.mmu.shuttle.backend.entities.Vehicle;
 import com.mmu.shuttle.backend.exceptions.ResourceNotFoundException;
+import com.mmu.shuttle.backend.mappers.AnnouncementCategoryModelMapper;
 import com.mmu.shuttle.backend.mappers.AnnouncementModelMapper;
+import com.mmu.shuttle.backend.models.AnnouncementCategoryResponse;
 import com.mmu.shuttle.backend.models.AnnouncementRequest;
 import com.mmu.shuttle.backend.models.AnnouncementResponse;
+import com.mmu.shuttle.backend.repositories.AnnouncementCategoryRepository;
 import com.mmu.shuttle.backend.repositories.AnnouncementRepository;
 import com.mmu.shuttle.backend.repositories.DriverRepository;
+import com.mmu.shuttle.backend.repositories.VehicleRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -34,10 +39,19 @@ public class AnnouncementService {
     private AnnouncementModelMapper announcementModelMapper;
 
     @Autowired
+    private AnnouncementCategoryRepository announcementCategoryRepository;
+
+    @Autowired
+    private AnnouncementCategoryModelMapper announcementCategoryModelMapper;
+
+    @Autowired
     private FileService fileService;
 
     @Autowired
     private DriverRepository driverRepository;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
 
     @Autowired
     private AuthService authService;
@@ -46,7 +60,14 @@ public class AnnouncementService {
     private Validator validator;
 
     public List<AnnouncementResponse> getAllAnnouncements() {
-        return announcementRepository.findAllByOrderByIsPinnedDescCreatedAtDesc().stream().map((announcement ->  announcementModelMapper.toAnnouncementResponse(announcement))).toList();
+        return announcementRepository.findAllByOrderByIsPinnedDescCreatedAtDesc().stream()
+                .map((announcement -> announcementModelMapper.toAnnouncementResponse(announcement))).toList();
+    }
+
+    public List<AnnouncementCategoryResponse> getAllAnnouncementCategories() {
+        return announcementCategoryRepository.findAll().stream()
+                .map(announcementCategoryModelMapper::toAnnouncementCategoryResponse)
+                .toList();
     }
 
     @Transactional
@@ -75,9 +96,18 @@ public class AnnouncementService {
             throw new ConstraintViolationException(violations);
         }
 
+        Vehicle vehicle = null;
+        Long vehicleId = announcementRequest.getVehicleId();
+        if (vehicleId != null) {
+            vehicle = vehicleRepository.findById(vehicleId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Vehicle with id " + vehicleId + " is not found"));
+        }
+
         announcement.setTitle(announcementRequest.getTitle());
         announcement.setDescription(announcementRequest.getDescription());
         announcement.setPinned(announcementRequest.isPinned());
+        announcement.setVehicle(vehicle);
         announcement.setCreatedAt(LocalDateTime.now());
         announcement.setDriver(driver);
 

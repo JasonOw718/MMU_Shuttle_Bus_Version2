@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @Data
 public class ActiveBusRequest {
     private Long routeId;
-    private String busPlate;
+    private Long vehicleId;
     private LocationModel location;
 }

@@ -5,16 +5,16 @@ import com.mmu.shuttle.backend.caches.RouteCache;
 import com.mmu.shuttle.backend.entities.Route;
 import com.mmu.shuttle.backend.entities.RouteStation;
 import com.mmu.shuttle.backend.entities.Station;
+import com.mmu.shuttle.backend.entities.Vehicle;
 import com.mmu.shuttle.backend.exceptions.ResourceNotFoundException;
 import com.mmu.shuttle.backend.models.ActiveBusModel;
 import com.mmu.shuttle.backend.models.ActiveBusRequest;
 import com.mmu.shuttle.backend.models.BusLocationModel;
 import com.mmu.shuttle.backend.models.LocationModel;
-import com.mmu.shuttle.backend.securities.DriverDetail;
+import com.mmu.shuttle.backend.repositories.VehicleRepository;
 import com.mmu.shuttle.backend.utils.GeoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -36,18 +36,26 @@ public class ActiveBusStoreService {
     @Autowired
     private AuthService authService;
 
-    public ActiveBusModel startRide(ActiveBusRequest activeBusRequest,Authentication authentication) {
+    @Autowired
+    private VehicleRepository vehicleRepository;
+
+    public ActiveBusModel startRide(ActiveBusRequest activeBusRequest, Authentication authentication) {
         Long routeId = activeBusRequest.getRouteId();
 
         if (routeId == null) {
             throw new ResourceNotFoundException("Route Id is null");
         }
 
-       String busPlate = authService.getBusPlateFromAuth(authentication);
-
-        if(busPlate == null){
-            throw new AuthorizationDeniedException("Invalid Credentials");
+        Long vehicleId = activeBusRequest.getVehicleId();
+        if (vehicleId == null) {
+            throw new ResourceNotFoundException("Vehicle Id is null");
         }
+
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle with id " + vehicleId + " is not found"));
+        String busPlate = vehicle.getBusPlate();
+
+        Long driverId = authService.getDriverIdFromAuth(authentication);
 
         Route route = routeCache.getRoute(routeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Route with id " + routeId + " is not found in cache"));
@@ -67,19 +75,16 @@ public class ActiveBusStoreService {
             throw new ResourceNotFoundException("Location is null");
         }
 
-        ActiveBusModel activeBusModel = activeBusStore.addActiveBus(routeId, busPlate, locationModel.getLongitude(), locationModel.getLatitude(), nextRouteStationId);
+        ActiveBusModel activeBusModel = activeBusStore.addActiveBus(routeId, busPlate, driverId, vehicleId,
+                locationModel.getLongitude(), locationModel.getLatitude(), nextRouteStationId);
         simpMessagingTemplate.convertAndSend("/routes/active_buses/" + routeId, activeBusModel);
         return activeBusModel;
     }
 
-    public void endRide(Long routeId,Authentication authentication) {
-        String busPlate = authService.getBusPlateFromAuth(authentication);
+    public void endRide(Long routeId, Authentication authentication) {
+        Long driverId = authService.getDriverIdFromAuth(authentication);
 
-        if(busPlate == null){
-            throw new AuthorizationDeniedException("Invalid Credentials");
-        }
-
-        ActiveBusModel activeBusModel = activeBusStore.removeActiveBus(routeId, busPlate);
+        ActiveBusModel activeBusModel = activeBusStore.removeActiveBus(routeId, driverId);
         if (activeBusModel != null) {
             simpMessagingTemplate.convertAndSend("/routes/active_buses/" + routeId, activeBusModel);
         }
@@ -91,13 +96,14 @@ public class ActiveBusStoreService {
 
     public void updateBusLocation(BusLocationModel busLocationModel, Authentication authentication) {
 
-        String busPlate = authService.getBusPlateFromAuth(authentication);
+        Long driverId = authService.getDriverIdFromAuth(authentication);
 
         Long routeId = busLocationModel.getRouteId();
         LocationModel newLocation = busLocationModel.getLocation();
 
-        ActiveBusModel activeBusModel = activeBusStore.updateBusLocation(routeId, busPlate, newLocation);
-        if (activeBusModel == null) return;
+        ActiveBusModel activeBusModel = activeBusStore.updateBusLocation(routeId, driverId, newLocation);
+        if (activeBusModel == null)
+            return;
 
         Route route = routeCache.getRoute(routeId).orElse(null);
         checkAndAdvanceStation(route, activeBusModel, newLocation);
@@ -194,9 +200,10 @@ public class ActiveBusStoreService {
             return null;
         }
 
-        DriverDetail driverDetail = (DriverDetail) authentication.getPrincipal();
-        ActiveBusModel activeBusModel = activeBusStore.getActiveBusByBusPlate(driverDetail.getBusPlate());
-        if (activeBusModel == null) return null;
+        Long driverId = authService.getDriverIdFromAuth(authentication);
+        ActiveBusModel activeBusModel = activeBusStore.getActiveBusByDriverId(driverId);
+        if (activeBusModel == null)
+            return null;
 
         return activeBusModel.getRouteId();
     }

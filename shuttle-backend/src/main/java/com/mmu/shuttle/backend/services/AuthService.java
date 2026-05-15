@@ -6,11 +6,9 @@ import com.mmu.shuttle.backend.models.LoginRequestModel;
 import com.mmu.shuttle.backend.securities.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -44,12 +42,7 @@ public class AuthService {
 
         driverModel.setId(driverDetail.getId());
         driverModel.setEmail(driverDetail.getEmail());
-        driverModel.setBusPlate(driverDetail.getBusPlate());
         return driverModel;
-    }
-
-    public String getBusPlateFromAuth(Authentication authentication) {
-        return getDriverDetail(authentication).getBusPlate();
     }
 
     public Long getDriverIdFromAuth(Authentication authentication) {
@@ -63,10 +56,6 @@ public class AuthService {
 
         if (!(authentication.getPrincipal() instanceof DriverDetail driverDetail)) {
             throw new AuthorizationDeniedException("Invalid Credentials Format");
-        }
-
-        if (driverDetail.getBusPlate() == null) {
-            throw new AuthorizationDeniedException("Invalid Credentials");
         }
 
         return driverDetail;

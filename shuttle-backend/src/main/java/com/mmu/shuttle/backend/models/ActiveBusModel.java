@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 public class ActiveBusModel {
     private Long id;
     private Long routeId;
+    private Long driverId;
+    private Long vehicleId;
     private String busPlate;
     private LocationModel location;
     private Long nextBusRouteStationId;

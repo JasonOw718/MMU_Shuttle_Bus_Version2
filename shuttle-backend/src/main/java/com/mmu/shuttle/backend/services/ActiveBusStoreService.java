@@ -4,6 +4,7 @@ import com.mmu.shuttle.backend.caches.ActiveBusStore;
 import com.mmu.shuttle.backend.caches.RouteCache;
 import com.mmu.shuttle.backend.entities.Route;
 import com.mmu.shuttle.backend.entities.RouteStation;
+import com.mmu.shuttle.backend.entities.Station;
 import com.mmu.shuttle.backend.exceptions.ResourceNotFoundException;
 import com.mmu.shuttle.backend.models.ActiveBusModel;
 import com.mmu.shuttle.backend.models.ActiveBusRequest;
@@ -136,13 +137,16 @@ public class ActiveBusStoreService {
         long maxLookaheadSequence = currentExpectedSequence + 2;
 
         for (RouteStation rs : stations) {
-            if (rs.getStation() != null && rs.getSequence() >= currentExpectedSequence && rs.getSequence() <= maxLookaheadSequence) {
+            Station station = rs.getStation();
+            if (station != null && rs.getSequence() >= currentExpectedSequence && rs.getSequence() <= maxLookaheadSequence) {
                 double distance = GeoUtils.calculateDistanceInMeters(
                         newLocation.getLatitude(), newLocation.getLongitude(),
                         rs.getStation().getLatitude(), rs.getStation().getLongitude()
                 );
 
-                if (distance <= 50.0 && distance < minDistance) {
+                double allowedRadius = "FMD".equalsIgnoreCase(station.getName()) ? 100.0 : 50.0;
+
+                if (distance <= allowedRadius && distance < minDistance) {
                     minDistance = distance;
                     physicallyReachedStation = rs;
                 }

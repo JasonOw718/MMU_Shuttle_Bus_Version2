@@ -44,7 +44,7 @@ public class SecurityConfig {
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Value("${cors.allowed-origins}")
-    private String[] allowedOrigins;
+    private String allowedOriginsString;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -74,8 +74,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("https://kasheng.dev", "https://www.kasheng.dev", "http://localhost:5173"));
-        // configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
+        List<String> originsList = Arrays.asList(allowedOriginsString.split(","));
+        
+        configuration.setAllowedOrigins(originsList);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

@@ -120,3 +120,6 @@ STATIC_ROOT/
 
 # SQL Scripts
 *.sql
+
+#admin panel 
+/mmu_shuttle_admin

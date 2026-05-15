@@ -4,6 +4,7 @@ import 'package:form_validator/form_validator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mmu_shuttle_driver/core/utils/toast.dart';
 import 'package:mmu_shuttle_driver/core/widgets/custom_elevated_button.dart';
+import 'package:mmu_shuttle_driver/features/announcement/constants/announcement_presets.dart';
 
 class CreateAnnouncementForm extends StatefulWidget {
   final Future<void> Function(
@@ -28,21 +29,95 @@ class CreateAnnouncementForm extends StatefulWidget {
 class _CreateAnnouncementFormState extends State<CreateAnnouncementForm> {
   // variables
   bool _isPinned = false;
+  bool _isCustom = false;
   PlatformFile? _selectedFile;
+  AnnouncementPreset? _selectedPreset;
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
   // methods
   Future<void> _handleSubmit() async {
-    if (_formKey.currentState!.validate()) {
+    if (_isCustom) {
+      if (!_formKey.currentState!.validate()) return;
       await widget.onSubmitted(
         _titleController.text,
         _descriptionController.text,
         _isPinned,
         _selectedFile,
       );
+      return;
     }
+
+    if (_selectedPreset == null) {
+      showErrorToast(context, 'Please select an announcement type');
+      return;
+    }
+
+    final preset = _selectedPreset!;
+    await widget.onSubmitted(
+      preset.title,
+      preset.description,
+      _isPinned,
+      _selectedFile,
+    );
+  }
+
+  void _onSelectPreset(AnnouncementPreset preset) {
+    setState(() {
+      _selectedPreset = preset;
+    });
+  }
+
+  void _onToggleCustom(bool value) {
+    setState(() {
+      _isCustom = value;
+      if (value) {
+        _selectedPreset = null;
+      } else {
+        _titleController.clear();
+        _descriptionController.clear();
+      }
+    });
+  }
+
+  Widget _buildModeSegment({
+    required String label,
+    required bool selected,
+    required bool value,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: widget.isLoading ? null : () => _onToggleCustom(value),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: selected ? const Color(0xFF4D6BB3) : Colors.grey.shade500,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _onTogglePin(value) {
@@ -149,49 +224,132 @@ class _CreateAnnouncementFormState extends State<CreateAnnouncementForm> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Title',
-            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _titleController,
-            validator: ValidationBuilder()
-                .minLength(1, 'Title is required')
-                .maxLength(80, 'Title is too long')
-                .build(),
-            decoration: InputDecoration(
-              hintText: 'Enter title',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                _buildModeSegment(
+                  label: 'Preset',
+                  selected: !_isCustom,
+                  value: false,
+                ),
+                _buildModeSegment(
+                  label: 'Custom',
+                  selected: _isCustom,
+                  value: true,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Description',
-            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _descriptionController,
-            maxLines: 4,
-            validator: ValidationBuilder()
-                .minLength(1, 'Description is required')
-                .maxLength(500, 'Description is too long')
-                .build(),
-            decoration: InputDecoration(
-              hintText: 'Enter description',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              contentPadding: const EdgeInsets.all(12),
+          const SizedBox(height: 12),
+          if (!_isCustom)
+            ...announcementPresets.map((preset) {
+              final isSelected = _selectedPreset?.key == preset.key;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: InkWell(
+                  onTap: isLoading ? null : () => _onSelectPreset(preset),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF003399).withValues(alpha: 0.08)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected
+                            ? const Color(0xFF003399)
+                            : Colors.grey.shade300,
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          preset.icon,
+                          size: 20,
+                          color: isSelected
+                              ? const Color(0xFF003399)
+                              : Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            preset.label,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected
+                                  ? const Color(0xFF003399)
+                                  : Colors.grey.shade700,
+                            ),
+                          ),
+                        ),
+                        if (isSelected)
+                          const Icon(
+                            Icons.check_circle,
+                            size: 20,
+                            color: Color(0xFF003399),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          if (_isCustom) ...[
+            const Text(
+              'Title',
+              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
             ),
-          ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _titleController,
+              validator: ValidationBuilder()
+                  .minLength(1, 'Title is required')
+                  .maxLength(80, 'Title is too long')
+                  .build(),
+              decoration: InputDecoration(
+                hintText: 'Enter title',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Description',
+              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _descriptionController,
+              maxLines: 4,
+              validator: ValidationBuilder()
+                  .minLength(1, 'Description is required')
+                  .maxLength(500, 'Description is too long')
+                  .build(),
+              decoration: InputDecoration(
+                hintText: 'Enter description',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.all(12),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           const Text(
             'Attachment (Optional)',

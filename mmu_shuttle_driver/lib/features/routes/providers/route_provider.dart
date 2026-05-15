@@ -94,13 +94,17 @@ class RouteProvider extends ChangeNotifier {
     };
   }
 
-  Future<void> startTracking({bool isResumed = false}) async {
+  Future<void> startTracking({
+    required int vehicleId,
+    bool isResumed = false,
+  }) async {
     Position currentLocation;
     currentLocation = await _locationService.getCurrentLocation();
     await _notificationService.requestNotificationPermission();
 
     final startRideModel = LiveRideModel(
       routeId: selectedRoute!.id,
+      vehicleId: vehicleId,
       latitude: currentLocation.latitude,
       longitude: currentLocation.longitude,
     );
@@ -123,6 +127,7 @@ class RouteProvider extends ChangeNotifier {
 
         final liveRideModel = LiveRideModel(
           routeId: selectedRoute!.id,
+          vehicleId: vehicleId,
           latitude: position.latitude,
           longitude: position.longitude,
         );

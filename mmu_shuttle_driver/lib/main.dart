@@ -4,6 +4,7 @@ import 'package:mmu_shuttle_driver/features/announcement/providers/announcement_
 import 'package:mmu_shuttle_driver/features/announcement/providers/file_provider.dart';
 import 'package:mmu_shuttle_driver/features/authentication/providers/auth_provider.dart';
 import 'package:mmu_shuttle_driver/features/routes/providers/route_provider.dart';
+import 'package:mmu_shuttle_driver/features/vehicle/providers/vehicle_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:toastification/toastification.dart';
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => RouteProvider()),
         ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
+        ChangeNotifierProvider(create: (_) => VehicleProvider()),
         ChangeNotifierProvider(create: (_) => FileProvider()),
       ],
       child: ToastificationWrapper(

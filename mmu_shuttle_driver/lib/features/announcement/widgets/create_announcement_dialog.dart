@@ -7,7 +7,9 @@ import 'package:mmu_shuttle_driver/features/announcement/widgets/header.dart';
 import 'package:provider/provider.dart';
 
 class CreateAnnouncementDialog extends StatefulWidget {
-  const CreateAnnouncementDialog({super.key});
+  final bool isFromLiveRide;
+
+  const CreateAnnouncementDialog({super.key, this.isFromLiveRide = false});
 
   @override
   State<CreateAnnouncementDialog> createState() =>
@@ -23,6 +25,7 @@ class _CreateAnnouncementDialogState extends State<CreateAnnouncementDialog> {
     String title,
     String description,
     bool isPinned,
+    int? vehicleId,
     PlatformFile? uploadedFile,
   ) async {
     try {
@@ -37,6 +40,7 @@ class _CreateAnnouncementDialogState extends State<CreateAnnouncementDialog> {
         title: title,
         description: description,
         isPinned: isPinned,
+        vehicleId: vehicleId,
         uploadedFile: uploadedFile,
       );
 
@@ -69,14 +73,17 @@ class _CreateAnnouncementDialogState extends State<CreateAnnouncementDialog> {
               HeaderWidget(title: 'Create Announcement', isLoading: _isLoading),
               const SizedBox(height: 24),
               CreateAnnouncementForm(
-                onSubmitted: (title, description, isPinned, uploadedFile) =>
-                    _onSubmit(
-                      context,
-                      title,
-                      description,
-                      isPinned,
-                      uploadedFile,
-                    ),
+                isFromLiveRide: widget.isFromLiveRide,
+                onSubmitted:
+                    (title, description, isPinned, vehicleId, uploadedFile) =>
+                        _onSubmit(
+                          context,
+                          title,
+                          description,
+                          isPinned,
+                          vehicleId,
+                          uploadedFile,
+                        ),
                 isLoading: _isLoading,
               ),
             ],

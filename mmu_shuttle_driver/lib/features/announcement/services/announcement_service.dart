@@ -1,11 +1,30 @@
 import 'package:dio/dio.dart';
 import 'package:mmu_shuttle_driver/core/constants.dart';
 import 'package:mmu_shuttle_driver/core/network/api.dart';
+import 'package:mmu_shuttle_driver/features/announcement/models/announcement_category_model.dart';
 import 'package:mmu_shuttle_driver/features/announcement/models/announcement_model.dart';
 
 List<AnnouncementModel> announcements = [];
 
 class AnnouncementService {
+  Future<List<AnnouncementCategoryModel>> fetchAnnouncementCategories() async {
+    try {
+      final response = await dio.get("/announcements/categories");
+      if (response.statusCode == 200) {
+        return response.data
+            .map<AnnouncementCategoryModel>(
+              (json) => AnnouncementCategoryModel.fromJson(json),
+            )
+            .toList();
+      }
+      throw Exception(DEFAULT_ERROR_MESSAGE);
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? DEFAULT_ERROR_MESSAGE);
+    } catch (e) {
+      throw Exception(DEFAULT_ERROR_MESSAGE);
+    }
+  }
+
   Future<List<AnnouncementModel>> fetchAnnouncements() async {
     try {
       final response = await dio.get("/announcements/all");

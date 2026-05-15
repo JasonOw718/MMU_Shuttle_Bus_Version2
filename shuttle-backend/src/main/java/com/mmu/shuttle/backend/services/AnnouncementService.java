@@ -1,9 +1,11 @@
 package com.mmu.shuttle.backend.services;
 
+import com.mmu.shuttle.backend.caches.ActiveBusStore;
 import com.mmu.shuttle.backend.entities.Announcement;
 import com.mmu.shuttle.backend.entities.Driver;
 import com.mmu.shuttle.backend.entities.Vehicle;
 import com.mmu.shuttle.backend.exceptions.ResourceNotFoundException;
+import com.mmu.shuttle.backend.models.ActiveBusModel;
 import com.mmu.shuttle.backend.mappers.AnnouncementCategoryModelMapper;
 import com.mmu.shuttle.backend.mappers.AnnouncementModelMapper;
 import com.mmu.shuttle.backend.models.AnnouncementCategoryResponse;
@@ -27,7 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-
 
 @Service
 public class AnnouncementService {
@@ -57,6 +58,9 @@ public class AnnouncementService {
     private AuthService authService;
 
     @Autowired
+    private ActiveBusStore activeBusStore;
+
+    @Autowired
     private Validator validator;
 
     public List<AnnouncementResponse> getAllAnnouncements() {
@@ -72,7 +76,8 @@ public class AnnouncementService {
 
     @Transactional
     public AnnouncementResponse toggleAnnouncement(Long id) {
-        Announcement announcement = announcementRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Announcement with " + id + " is not found"));
+        Announcement announcement = announcementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Announcement with " + id + " is not found"));
         announcement.setPinned(!announcement.isPinned());
         return announcementModelMapper.toAnnouncementResponse(announcementRepository.save(announcement));
     }
@@ -82,11 +87,12 @@ public class AnnouncementService {
             Authentication authentication) {
         Long driverId = authService.getDriverIdFromAuth(authentication);
 
-        Driver driver = driverRepository.findById(driverId).orElseThrow(() -> new ResourceNotFoundException("Driver with " + driverId + " is not found"));
+        Driver driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new ResourceNotFoundException("Driver with " + driverId + " is not found"));
 
         Announcement announcement = new Announcement();
         String fileName = "";
-        if(file != null){
+        if (file != null) {
             fileName = fileService.uploadFile(file);
             announcement.setFileName(fileName);
         }
@@ -102,6 +108,11 @@ public class AnnouncementService {
             vehicle = vehicleRepository.findById(vehicleId)
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Vehicle with id " + vehicleId + " is not found"));
+        } else {
+            ActiveBusModel activeBus = activeBusStore.getActiveBusByDriverId(driverId);
+            if (activeBus != null && activeBus.getVehicleId() != null) {
+                vehicle = vehicleRepository.findById(activeBus.getVehicleId()).orElse(null);
+            }
         }
 
         announcement.setTitle(announcementRequest.getTitle());
@@ -114,8 +125,8 @@ public class AnnouncementService {
         try {
             Announcement savedAnnouncement = announcementRepository.save(announcement);
             return announcementModelMapper.toAnnouncementResponse(savedAnnouncement);
-        }catch (Exception e){
-            if(file != null){
+        } catch (Exception e) {
+            if (file != null) {
                 fileService.deleteFile(fileName);
             }
             throw e;
@@ -136,7 +147,7 @@ public class AnnouncementService {
             announcementRepository.deleteAllByCreatedAtBefore(oneMonthAgo);
 
             return oldAnnouncements.size();
-        }catch (Exception e){
+        } catch (Exception e) {
             throw e;
         }
     }

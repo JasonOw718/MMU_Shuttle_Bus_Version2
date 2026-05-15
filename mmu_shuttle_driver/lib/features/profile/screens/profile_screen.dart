@@ -70,7 +70,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // passed value
         final id = currentSignInDriver?.id ?? -1;
         final email = currentSignInDriver?.email ?? '';
-        final busPlate = currentSignInDriver?.busPlate ?? '';
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
@@ -101,10 +100,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 8),
                         InformationRowWidget(label: 'Email', value: email),
-                        InformationRowWidget(
-                          label: 'Bus Plate',
-                          value: busPlate,
-                        ),
                       ],
                     ],
                   ),

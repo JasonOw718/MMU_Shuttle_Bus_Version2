@@ -8,6 +8,7 @@ import 'package:mmu_shuttle_driver/features/announcement/widgets/create_announce
 import 'package:mmu_shuttle_driver/features/routes/models/route_model.dart';
 import 'package:mmu_shuttle_driver/features/routes/providers/route_provider.dart';
 import 'package:mmu_shuttle_driver/features/routes/widgets/back_button.dart';
+import 'package:mmu_shuttle_driver/features/routes/widgets/select_vehicle_dialog.dart';
 import 'package:mmu_shuttle_driver/features/routes/widgets/start_route_card.dart';
 import 'package:provider/provider.dart';
 
@@ -30,7 +31,7 @@ class _StartRouteScreenState extends State<StartRouteScreen> {
     routeProvider.loadSelectedRoute();
     _isOngoing = widget.isOngoing;
     if (_isOngoing) {
-      _onStartJourney(isResumed: true);
+      _startJourney(vehicleId: -1, isResumed: true);
     }
   }
 
@@ -48,12 +49,26 @@ class _StartRouteScreenState extends State<StartRouteScreen> {
   }
 
   //methods
-  void _onStartJourney({bool isResumed = false}) async {
+  void _onStartJourney() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => SelectVehicleDialog(
+        onSelected: (vehicle) => _startJourney(vehicleId: vehicle.id),
+      ),
+    );
+  }
+
+  void _startJourney({required int vehicleId, bool isResumed = false}) async {
     try {
       setState(() {
         _isLoading = true;
       });
-      await context.read<RouteProvider>().startTracking(isResumed: isResumed);
+      await context.read<RouteProvider>().startTracking(
+        vehicleId: vehicleId,
+        isResumed: isResumed,
+      );
+      if (!mounted) return;
       setState(() {
         _isOngoing = true;
       });
@@ -82,7 +97,7 @@ class _StartRouteScreenState extends State<StartRouteScreen> {
   void _onSendUpdate() {
     showDialog(
       context: context,
-      builder: (context) => CreateAnnouncementDialog(),
+      builder: (context) => CreateAnnouncementDialog(isFromLiveRide: true),
     );
   }
 

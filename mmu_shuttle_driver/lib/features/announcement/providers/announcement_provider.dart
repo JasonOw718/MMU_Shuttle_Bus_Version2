@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:mmu_shuttle_driver/features/announcement/models/announcement_category_model.dart';
 import 'package:mmu_shuttle_driver/features/announcement/models/announcement_model.dart';
 import 'package:mmu_shuttle_driver/features/announcement/models/create_announcement_model.dart';
 import 'package:mmu_shuttle_driver/features/announcement/services/announcement_service.dart';
@@ -10,27 +11,35 @@ import 'package:mmu_shuttle_driver/features/announcement/services/announcement_s
 class AnnouncementProvider extends ChangeNotifier {
   // variables
   List<AnnouncementModel> _announcements = [];
+  List<AnnouncementCategoryModel> _categories = [];
   bool _isLoading = true;
+  bool _isCategoriesLoading = false;
   String? _errorMesssage;
+  String? _categoriesErrorMessage;
 
   final _announcementService = AnnouncementService();
 
   // getters
   List<AnnouncementModel> get announcements => _announcements;
+  List<AnnouncementCategoryModel> get categories => _categories;
   bool get isLoading => _isLoading;
+  bool get isCategoriesLoading => _isCategoriesLoading;
   String? get errorMessage => _errorMesssage;
+  String? get categoriesErrorMessage => _categoriesErrorMessage;
 
   // methods
   Future<void> createAnnouncement({
     required String title,
     required String description,
     required bool isPinned,
+    required int? vehicleId,
     required PlatformFile? uploadedFile,
   }) async {
     final announcement = CreateAnnouncementModel(
       title: title,
       description: description,
       isPinned: isPinned,
+      vehicleId: vehicleId,
     );
 
     final formData = FormData.fromMap({
@@ -85,15 +94,34 @@ class AnnouncementProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fetchCategories() async {
+    _setCategoriesLoadingState(true);
+    try {
+      _categories = await _announcementService.fetchAnnouncementCategories();
+      _setCategoriesLoadingState(false);
+    } catch (e) {
+      _setCategoriesLoadingState(false, error: e.toString());
+    }
+  }
+
   void _setLoadingState(bool loading, {String? error}) {
     _isLoading = loading;
     _errorMesssage = error;
     notifyListeners();
   }
 
+  void _setCategoriesLoadingState(bool loading, {String? error}) {
+    _isCategoriesLoading = loading;
+    _categoriesErrorMessage = error;
+    notifyListeners();
+  }
+
   void clearData() {
     _announcements = [];
-    _isLoading = true;
+    _categories = [];
+    _isLoading = false;
+    _isCategoriesLoading = false;
     _errorMesssage = null;
+    _categoriesErrorMessage = null;
   }
 }

@@ -14,7 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -31,7 +30,7 @@ public class AnnouncementController {
 
     @GetMapping("/all")
     public ResponseEntity<List<AnnouncementResponse>> getAllAnnouncements() {
-        return new ResponseEntity(announcementService.getAllAnnouncements(), HttpStatus.OK);
+        return new ResponseEntity<>(announcementService.getAllAnnouncements(), HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('DRIVER')")

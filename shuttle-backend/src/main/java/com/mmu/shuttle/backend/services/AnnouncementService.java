@@ -2,7 +2,6 @@ package com.mmu.shuttle.backend.services;
 
 import com.mmu.shuttle.backend.entities.Announcement;
 import com.mmu.shuttle.backend.entities.Driver;
-import com.mmu.shuttle.backend.exceptions.FileException;
 import com.mmu.shuttle.backend.exceptions.ResourceNotFoundException;
 import com.mmu.shuttle.backend.mappers.AnnouncementModelMapper;
 import com.mmu.shuttle.backend.models.AnnouncementRequest;
@@ -10,6 +9,11 @@ import com.mmu.shuttle.backend.models.AnnouncementResponse;
 import com.mmu.shuttle.backend.repositories.AnnouncementRepository;
 import com.mmu.shuttle.backend.repositories.DriverRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -17,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+
 
 @Service
 public class AnnouncementService {
@@ -36,6 +42,9 @@ public class AnnouncementService {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private Validator validator;
+
     public List<AnnouncementResponse> getAllAnnouncements() {
         return announcementRepository.findAllByOrderByIsPinnedDescCreatedAtDesc().stream().map((announcement ->  announcementModelMapper.toAnnouncementResponse(announcement))).toList();
     }
@@ -48,7 +57,8 @@ public class AnnouncementService {
     }
 
     @Transactional
-    public AnnouncementResponse createAnnouncement(AnnouncementRequest announcementRequest, MultipartFile file, Authentication authentication) {
+    public AnnouncementResponse createAnnouncement(@Valid AnnouncementRequest announcementRequest, MultipartFile file,
+            Authentication authentication) {
         Long driverId = authService.getDriverIdFromAuth(authentication);
 
         Driver driver = driverRepository.findById(driverId).orElseThrow(() -> new ResourceNotFoundException("Driver with " + driverId + " is not found"));
@@ -58,6 +68,11 @@ public class AnnouncementService {
         if(file != null){
             fileName = fileService.uploadFile(file);
             announcement.setFileName(fileName);
+        }
+
+        Set<ConstraintViolation<AnnouncementRequest>> violations = validator.validate(announcementRequest);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
         }
 
         announcement.setTitle(announcementRequest.getTitle());

@@ -158,7 +158,7 @@ class _CreateAnnouncementFormState extends State<CreateAnnouncementForm> {
             controller: _titleController,
             validator: ValidationBuilder()
                 .minLength(1, 'Title is required')
-                .maxLength(50, 'Title is too long')
+                .maxLength(80, 'Title is too long')
                 .build(),
             decoration: InputDecoration(
               hintText: 'Enter title',
@@ -182,7 +182,7 @@ class _CreateAnnouncementFormState extends State<CreateAnnouncementForm> {
             maxLines: 4,
             validator: ValidationBuilder()
                 .minLength(1, 'Description is required')
-                .maxLength(100, 'Description is too long')
+                .maxLength(500, 'Description is too long')
                 .build(),
             decoration: InputDecoration(
               hintText: 'Enter description',

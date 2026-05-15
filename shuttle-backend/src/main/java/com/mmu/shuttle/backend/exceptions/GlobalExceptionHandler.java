@@ -1,8 +1,9 @@
 package com.mmu.shuttle.backend.exceptions;
 
-
 import com.mmu.shuttle.backend.models.ExceptionModel;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 @Slf4j
@@ -88,6 +90,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ExceptionModel> handleConstraintViolation(ConstraintViolationException ex,
+            HttpServletRequest request) {
+        log.error(ex.getMessage(), ex);
+        String message = ex.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.joining("; "));
+        ExceptionModel error = new ExceptionModel(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Validation Error",
+                message,
+                request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ExceptionModel> handleDuplicateResourceException(DuplicateResourceException ex, HttpServletRequest request) {

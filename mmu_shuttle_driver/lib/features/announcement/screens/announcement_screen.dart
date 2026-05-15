@@ -44,80 +44,111 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
-          child: Consumer<AnnouncementProvider>(
-            builder: (context, announcementProvider, child) {
-              //pass values
-              final announcements = announcementProvider.announcements;
-              final isLoading = announcementProvider.isLoading;
-              final errorMessage = announcementProvider.errorMessage;
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(25, 20, 25, 0),
+              child: HeaderWidget(
+                title: 'Announcements',
+                subtitle: 'Manage and create announcements',
+              ),
+            ),
+            const SizedBox(height: 25),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () =>
+                    context.read<AnnouncementProvider>().fetchAnnouncements(),
+                child: Consumer<AnnouncementProvider>(
+                  builder: (context, announcementProvider, child) {
+                    //pass values
+                    final announcements = announcementProvider.announcements;
+                    final isLoading = announcementProvider.isLoading;
+                    final errorMessage = announcementProvider.errorMessage;
 
-              if (isLoading == true) {
-                return const Center(child: CircularProgressIndicator());
-              }
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        Widget body;
 
-              if (errorMessage != null) {
-                return Center(
-                  child: ErrorLabelWidget(
-                    errorMessage: errorMessage,
-                    onRetry: () {
-                      context.read<AnnouncementProvider>().fetchAnnouncements();
-                    },
-                  ),
-                );
-              }
-
-              if (announcements.isEmpty) {
-                return Center(
-                  child: Text(
-                    'No announcements found',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                );
-              }
-
-              return SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 100),
-                child: Column(
-                  children: [
-                    HeaderWidget(
-                      title: 'Announcements',
-                      subtitle: 'Manage and create announcements',
-                    ),
-                    SizedBox(height: 25),
-                    ...announcements.map((announcement) {
-                      return Column(
-                        children: [
-                          AnnouncementCardWidget(
-                            title: announcement.title,
-                            description: announcement.description,
-                            createdAt: formatAnnouncementDate(
-                              announcement.createdAt.toString(),
+                        if (isLoading == true) {
+                          body = const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (errorMessage != null) {
+                          body = Center(
+                            child: ErrorLabelWidget(
+                              errorMessage: errorMessage,
+                              onRetry: () {
+                                context
+                                    .read<AnnouncementProvider>()
+                                    .fetchAnnouncements();
+                              },
                             ),
-                            isPinned: announcement.isPinned,
-                            fileName: announcement.fileName,
-                            onTogglePin: () => showDialog(
-                              context: context,
-                              builder: (context) => TogglePinConfirmationDialog(
-                                isPinned: announcement.isPinned,
-                                onTogglePin: () =>
-                                    _onTogglePin(context, announcement.id),
+                          );
+                        } else if (announcements.isEmpty) {
+                          body = Center(
+                            child: Text(
+                              'No announcements found',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
                               ),
                             ),
-                            onView: announcement.fileName != null
-                                ? () => _onView(context, announcement.fileName!)
-                                : null,
+                          );
+                        } else {
+                          body = Column(
+                            children: announcements.map((announcement) {
+                              return Column(
+                                children: [
+                                  AnnouncementCardWidget(
+                                    title: announcement.title,
+                                    description: announcement.description,
+                                    createdAt: formatAnnouncementDate(
+                                      announcement.createdAt.toString(),
+                                    ),
+                                    isPinned: announcement.isPinned,
+                                    fileName: announcement.fileName,
+                                    onTogglePin: () => showDialog(
+                                      context: context,
+                                      builder: (context) =>
+                                          TogglePinConfirmationDialog(
+                                            isPinned: announcement.isPinned,
+                                            onTogglePin: () => _onTogglePin(
+                                              context,
+                                              announcement.id,
+                                            ),
+                                          ),
+                                    ),
+                                    onView: announcement.fileName != null
+                                        ? () => _onView(
+                                            context,
+                                            announcement.fileName!,
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(height: 10),
+                                ],
+                              );
+                            }).toList(),
+                          );
+                        }
+
+                        return SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(25, 0, 25, 100),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: body,
                           ),
-                          SizedBox(height: 10),
-                        ],
-                      );
-                    }),
-                  ],
+                        );
+                      },
+                    );
+                  },
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+          ],
         ),
         Positioned(
           bottom: 20,

@@ -35,75 +35,91 @@ class _RouteScreenState extends State<RouteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 18),
-        child: Column(
-          children: [
-            HeaderWidget(
-              title: 'My Routes',
-              subtitle: 'Select a route to start pickup',
-            ),
-            SizedBox(height: 25),
-            Consumer<RouteProvider>(
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(25, 18, 25, 0),
+          child: HeaderWidget(
+            title: 'My Routes',
+            subtitle: 'Select a route to start pickup',
+          ),
+        ),
+        const SizedBox(height: 25),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => context.read<RouteProvider>().fetchRoutes(),
+            child: Consumer<RouteProvider>(
               builder: (context, routeProvider, child) {
                 //passed value
                 final routes = routeProvider.routes;
                 final isLoading = routeProvider.isLoading;
                 final errorMessage = routeProvider.errorMesssage;
 
-                if (isLoading) {
-                  return Column(
-                    children: List.generate(3, (index) {
-                      return const Column(
-                        children: [SkeletonWidget(), SizedBox(height: 10)],
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    Widget body;
+
+                    if (isLoading) {
+                      body = Column(
+                        children: List.generate(3, (index) {
+                          return const Column(
+                            children: [SkeletonWidget(), SizedBox(height: 10)],
+                          );
+                        }),
                       );
-                    }),
-                  );
-                }
-
-                if (errorMessage != null) {
-                  return Column(
-                    children: [
-                      SizedBox(height: 20),
-                      ErrorLabelWidget(
-                        errorMessage: errorMessage,
-                        onRetry: () {
-                          routeProvider.fetchRoutes();
-                        },
-                      ),
-                    ],
-                  );
-                }
-
-                if (routes.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No routes found',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                    ),
-                  );
-                }
-
-                return Column(
-                  children: routes.map((route) {
-                    return Column(
-                      children: [
-                        RouteCardWidget(
-                          routeName: route.routeName,
-                          stationCount: route.totalStations,
-                          onTap: () => _onTap(context, route),
+                    } else if (errorMessage != null) {
+                      body = Center(
+                        child: ErrorLabelWidget(
+                          errorMessage: errorMessage,
+                          onRetry: () {
+                            routeProvider.fetchRoutes();
+                          },
                         ),
-                        const SizedBox(height: 10),
-                      ],
+                      );
+                    } else if (routes.isEmpty) {
+                      body = Center(
+                        child: Text(
+                          'No routes found',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      );
+                    } else {
+                      body = Column(
+                        children: routes.map((route) {
+                          return Column(
+                            children: [
+                              RouteCardWidget(
+                                routeName: route.routeName,
+                                stationCount: route.totalStations,
+                                onTap: () => _onTap(context, route),
+                              ),
+                              const SizedBox(height: 10),
+                            ],
+                          );
+                        }).toList(),
+                      );
+                    }
+
+                    return SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 25),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: body,
+                      ),
                     );
-                  }).toList(),
+                  },
                 );
               },
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

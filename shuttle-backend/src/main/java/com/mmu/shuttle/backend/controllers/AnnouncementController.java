@@ -34,6 +34,7 @@ public class AnnouncementController {
         return new ResponseEntity<>(announcementService.getAllAnnouncements(), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('DRIVER')")
     @GetMapping("/categories")
     public ResponseEntity<List<AnnouncementCategoryResponse>> getAllAnnouncementCategories() {
         return new ResponseEntity<>(announcementService.getAllAnnouncementCategories(), HttpStatus.OK);

@@ -29,8 +29,4 @@ secret:
   key: ${SECRET_KEY}
 
 cors:
-  allowed-origins:
-    - https://kasheng.me
-    - https://www.kasheng.me
-    - https://api.kasheng.dev
-    - https://www.kasheng.api
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}

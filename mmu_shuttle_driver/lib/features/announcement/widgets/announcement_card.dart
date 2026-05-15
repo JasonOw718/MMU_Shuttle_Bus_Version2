@@ -8,6 +8,7 @@ class AnnouncementCardWidget extends StatelessWidget {
   final String createdAt;
   final bool isPinned;
   final String? fileName;
+  final String busPlate;
   final VoidCallback onTogglePin;
   final VoidCallback? onView;
 
@@ -18,6 +19,7 @@ class AnnouncementCardWidget extends StatelessWidget {
     required this.createdAt,
     required this.isPinned,
     required this.fileName,
+    required this.busPlate,
     required this.onTogglePin,
     required this.onView,
   });
@@ -120,13 +122,45 @@ class AnnouncementCardWidget extends StatelessWidget {
                           ViewFileWidget(fileName: fileName!, onView: onView),
                           const SizedBox(height: 25),
                         ],
-                        Text(
-                          createdAt,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w400,
-                          ),
+                        Row(
+                          children: [
+                            if (busPlate.isNotEmpty) ...[
+                              Icon(
+                                Icons.directions_bus_outlined,
+                                size: 14,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                busPlate,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
+                                child: Text(
+                                  '·',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
+                              ),
+                            ],
+                            Text(
+                              createdAt,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

@@ -5,4 +5,5 @@ export interface Announcement {
     createdAt: Date;
     isPinned: boolean;
     fileName?: string;
+    busPlate: string;
 }

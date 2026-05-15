@@ -1,4 +1,4 @@
-import { Pin, Megaphone, Info } from "lucide-react";
+import { Pin, Megaphone, Info, Bus } from "lucide-react";
 import type { AnnouncementCardProps } from "../interfaces/props/AnnouncementProps";
 import ViewFileButton from "./ViewFileButton";
 import { viewImage } from "../services/fileService";
@@ -49,9 +49,16 @@ const AnnouncementCard = ({ announcement }: AnnouncementCardProps) => {
                 {announcement.fileName && (
                     <ViewFileButton fileName={announcement.fileName} onView={onView} />
                 )}
-                <span className="text-xs md:text-sm text-gray-400 font-medium whitespace-pre-wrap">
-                    {formattedDate}
-                </span>
+                <div className="flex items-center gap-2 text-xs md:text-sm text-gray-400 font-medium">
+                    {announcement.busPlate && (
+                        <>
+                            <Bus className="w-3.5 h-3.5" />
+                            <span>{announcement.busPlate}</span>
+                            <span className="text-gray-300">·</span>
+                        </>
+                    )}
+                    <span className="whitespace-pre-wrap">{formattedDate}</span>
+                </div>
             </div>
         </div>
     );

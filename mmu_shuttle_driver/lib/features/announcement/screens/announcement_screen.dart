@@ -107,6 +107,7 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
                                     ),
                                     isPinned: announcement.isPinned,
                                     fileName: announcement.fileName,
+                                    busPlate: announcement.busPlate,
                                     onTogglePin: () => showDialog(
                                       context: context,
                                       builder: (context) =>

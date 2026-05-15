@@ -5,6 +5,7 @@ class AnnouncementModel {
   final String? fileName;
   bool isPinned;
   final DateTime createdAt;
+  final String busPlate;
 
   AnnouncementModel({
     required this.id,
@@ -13,6 +14,7 @@ class AnnouncementModel {
     required this.fileName,
     required this.isPinned,
     required this.createdAt,
+    required this.busPlate,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class AnnouncementModel {
       fileName: json['fileName'],
       isPinned: json['isPinned'] ?? false,
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      busPlate: json['busPlate'] ?? '',
     );
   }
 
@@ -33,6 +36,7 @@ class AnnouncementModel {
     DateTime? createdAt,
     bool? isPinned,
     String? fileName,
+    String? busPlate,
   }) {
     return AnnouncementModel(
       id: id ?? this.id,
@@ -41,6 +45,7 @@ class AnnouncementModel {
       createdAt: createdAt ?? this.createdAt,
       isPinned: isPinned ?? this.isPinned,
       fileName: fileName ?? this.fileName,
+      busPlate: busPlate ?? this.busPlate,
     );
   }
 }

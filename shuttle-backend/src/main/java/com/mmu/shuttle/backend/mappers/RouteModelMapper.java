@@ -71,8 +71,8 @@ public class RouteModelMapper {
         String nextArrival = "";
 
         if (schedule != null && schedule.getTimeSlots() != null) {
-            final List<String> ONE_PM_SLOTS = Arrays.asList("13:00 PM", "13:05 PM", "13:10 PM");
-            final String TWO_THIRTY_PM_SLOT = "14:30 PM";
+            final List<String> ONE_PM_SLOTS = Arrays.asList("1:00 PM", "1:05 PM", "1:10 PM");
+            final String TWO_THIRTY_PM_SLOT = "2:30 PM";
 
             List<String> filteredSlots = schedule.getTimeSlots().stream()
                     .filter(slot -> {

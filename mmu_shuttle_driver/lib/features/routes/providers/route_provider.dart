@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
@@ -26,6 +27,7 @@ class RouteProvider extends ChangeNotifier {
 
   final _locationService = LocationService();
   final _notificationService = NotificationService();
+  final _battery = Battery();
 
   bool _isLoading = true;
   String? _errorMesssage;
@@ -118,18 +120,41 @@ class RouteProvider extends ChangeNotifier {
     notifyListeners();
 
     _locationService.startLocationStreaming(
-      (Position position) {
+      (Position position) async {
         _stationPoints.removeWhere(
           (m) => m.markerId == const MarkerId('shuttle_bus'),
         );
         updateBusLocation(position);
         notifyListeners();
 
+        int? batteryLevel;
+        bool? isCharging;
+        try {
+          batteryLevel = await _battery.batteryLevel;
+          final state = await _battery.batteryState;
+          isCharging =
+              state == BatteryState.charging || state == BatteryState.full;
+        } catch (_) {
+          batteryLevel = null;
+          isCharging = null;
+        }
+
+        final lifecycle = WidgetsBinding.instance.lifecycleState;
+        final appState = lifecycle == AppLifecycleState.resumed
+            ? 'foreground'
+            : 'background';
+
         final liveRideModel = LiveRideModel(
           routeId: selectedRoute!.id,
           vehicleId: vehicleId,
           latitude: position.latitude,
           longitude: position.longitude,
+          speed: position.speed,
+          accuracy: position.accuracy,
+          batteryLevel: batteryLevel,
+          isCharging: isCharging,
+          appState: appState,
+          timestamp: position.timestamp,
         );
 
         _locationService.sendLiveLocation(liveRideModel);

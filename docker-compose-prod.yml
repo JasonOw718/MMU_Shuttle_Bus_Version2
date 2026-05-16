@@ -14,6 +14,10 @@ services:
       - STORAGE_URL=${STORAGE_URL}
       - SECRET_KEY=${JWT_SECRET}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - LOKI_URL=${LOKI_URL}
+      - LOKI_USER=${LOKI_USER}
+      - LOKI_PASSWORD=${LOKI_PASSWORD}
+      
     depends_on:
       postgres-db:
         condition: service_healthy

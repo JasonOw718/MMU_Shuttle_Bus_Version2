@@ -75,6 +75,9 @@ VITE_API_URL=https://your-api-domain.com
 VITE_WEB_SOCKET_URL=https://your-api-domain.com/ws-endpoint
 
 CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+LOKI_URL=https://your-loki-instance.grafana.net/loki/api/v1/push
+LOKI_USER=your_loki_user_id
+LOKI_PASSWORD=your_loki_api_token
 EOF
 
 ```

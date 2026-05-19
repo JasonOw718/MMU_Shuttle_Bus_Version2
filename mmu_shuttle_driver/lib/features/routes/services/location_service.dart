@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mmu_shuttle_driver/core/authentication/token_manager.dart';
 import 'package:mmu_shuttle_driver/core/constants.dart';
 import 'package:mmu_shuttle_driver/core/exceptions/LocationException.dart';
 import 'package:mmu_shuttle_driver/core/routing/app_router.dart';
 import 'package:mmu_shuttle_driver/core/utils/toast.dart';
+import 'package:mmu_shuttle_driver/features/authentication/services/auth_service.dart';
 import 'package:mmu_shuttle_driver/features/routes/models/live_ride_model.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
@@ -15,6 +17,7 @@ class LocationService {
   StompClient? _stompClient;
   StreamSubscription<Position>? _positionSubscription;
   bool _isConnected = false;
+  bool _isRefreshingToken = false;
 
   Future<Position> getCurrentLocation() async {
     bool serviceEnabled;
@@ -101,11 +104,16 @@ class LocationService {
             print('WebSocket Error (No Context): $error');
           }
         },
-        onStompError: (StompFrame frame) {
+        onStompError: (StompFrame frame) async {
           _isConnected = false;
 
           final errorMsg =
               frame.headers['message'] ?? frame.body ?? 'Unknown STOMP Error';
+
+          if (errorMsg == 'JWT_EXPIRED') {
+            await _refreshTokenAndReconnect(context);
+            return;
+          }
 
           if (context != null) {
             showErrorToast(context, 'STOMP Error: $errorMsg');
@@ -134,15 +142,44 @@ class LocationService {
     _isConnected = true;
   }
 
+  Future<void> _refreshTokenAndReconnect(BuildContext? context) async {
+    if (_isRefreshingToken) return;
+    _isRefreshingToken = true;
+
+    // Stop further reconnect attempts while we refresh the token.
+    _stompClient?.deactivate();
+
+    try {
+      final authService = AuthService();
+      final loginRequest = await authService.loadCredentialsFromStorage();
+      await authService.signIn(loginRequest);
+
+      // Reconnect with the freshly issued token.
+      initializeConnection();
+    } catch (e) {
+      if (context != null && context.mounted) {
+        showErrorToast(context, SESSION_EXPIRED_MESSAGE);
+      } else {
+        print('token refresh failed: $e');
+      }
+    } finally {
+      _isRefreshingToken = false;
+    }
+  }
+
   void sendLiveLocation(LiveRideModel liveRideModel) {
     if (!_isConnected) {
       return;
     }
 
-    _stompClient?.send(
-      destination: '/app/updateLocation',
-      body: jsonEncode(liveRideModel.toJson()),
-    );
+    try{
+      _stompClient?.send(
+        destination: '/app/updateLocation',
+        body: jsonEncode(liveRideModel.toJson()),
+      );
+    } catch (e) {
+      print('Error sending live location: $e');
+    }
   }
 
   void disconnect() {

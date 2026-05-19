@@ -150,12 +150,10 @@ class LocationService {
     _stompClient?.deactivate();
 
     try {
-      final authService = AuthService();
-      final loginRequest = await authService.loadCredentialsFromStorage();
-      await authService.signIn(loginRequest);
-
-      // Reconnect with the freshly issued token.
-      initializeConnection();
+      await AuthService().renewToken(context, () async {
+        // Reconnect with the freshly issued token.
+        initializeConnection();
+      });
     } catch (e) {
       if (context != null && context.mounted) {
         showErrorToast(context, SESSION_EXPIRED_MESSAGE);
@@ -172,7 +170,7 @@ class LocationService {
       return;
     }
 
-    try{
+    try {
       _stompClient?.send(
         destination: '/app/updateLocation',
         body: jsonEncode(liveRideModel.toJson()),

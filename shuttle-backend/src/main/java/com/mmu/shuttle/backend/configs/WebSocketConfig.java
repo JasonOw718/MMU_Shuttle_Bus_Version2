@@ -2,6 +2,9 @@ package com.mmu.shuttle.backend.configs;
 
 import com.mmu.shuttle.backend.exceptions.WebSocketExceptionHandler;
 import com.mmu.shuttle.backend.securities.JwtService;
+
+import io.jsonwebtoken.ExpiredJwtException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -60,12 +63,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
                     if (authHeader != null && authHeader.startsWith("Bearer ")) {
                         String token = authHeader.substring(7);
-                        if (jwtService.isTokenValid(token)) {
+                        try {
                             String email = jwtService.extractUsername(token);
+
                             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-                            accessor.setUser(new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+                            accessor.setUser(new UsernamePasswordAuthenticationToken(userDetails, null,
+                                    userDetails.getAuthorities()));
+
+                        } catch (ExpiredJwtException e) {
+                            throw new AccessDeniedException("JWT_EXPIRED");
+                        } catch (Exception e) {
+                            throw new AccessDeniedException("JWT_INVALID");
                         }
-                    }
+                    } 
                 }
 
                 else if (StompCommand.SEND.equals(accessor.getCommand())) {

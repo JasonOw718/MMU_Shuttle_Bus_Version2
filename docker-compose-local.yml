@@ -60,6 +60,9 @@ services:
         - VITE_GOOGLE_MAPS_ID=${VITE_GOOGLE_MAPS_ID}
         - VITE_API_URL=${VITE_API_URL}
         - VITE_WEB_SOCKET_URL=${VITE_WEB_SOCKET_URL}
+        - VITE_TELEGRAM_BOT_TOKEN=${VITE_TELEGRAM_BOT_TOKEN}
+        - VITE_TELEGRAM_CHAT_ID=${VITE_TELEGRAM_CHAT_ID}
+        
     container_name: nginx
     ports:
       - "80:80"

@@ -1,3 +1,4 @@
+import { NavLink } from "react-router";
 import mmuLogo from "../assets/mmu_logo.svg";
 
 const AppBar = () => {
@@ -8,6 +9,24 @@ const AppBar = () => {
                     <img src={mmuLogo} alt="MMU Logo" className="w-full h-full object-contain" />
                 </div>
                 <span className="font-bold text-xl md:text-2xl tracking-wide">MMU Bus Tracker</span>
+            </div>
+            <div className="flex items-center gap-2">
+                <NavLink
+                    to="/"
+                    className={({ isActive }) =>
+                        `px-4 py-2 rounded-full text-sm font-semibold transition-colors ${isActive ? "bg-white text-[#113a9f]" : "text-white hover:bg-white/10"}`
+                    }
+                >
+                    Home
+                </NavLink>
+                <NavLink
+                    to="/feedback"
+                    className={({ isActive }) =>
+                        `px-4 py-2 rounded-full text-sm font-semibold transition-colors ${isActive ? "bg-white text-[#113a9f]" : "text-white hover:bg-white/10"}`
+                    }
+                >
+                    Feedback
+                </NavLink>
             </div>
         </nav>
     );

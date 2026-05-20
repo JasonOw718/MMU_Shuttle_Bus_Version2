@@ -60,6 +60,8 @@ VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 VITE_GOOGLE_MAPS_ID=your_google_maps_id
 VITE_API_URL=http://localhost/api
 VITE_WEB_SOCKET_URL=http://localhost/ws-endpoint
+VITE_TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+VITE_TELEGRAM_CHAT_ID=your_chat_token
 ```
 
 > The `VITE_*` values are **build-time** inputs to the student Dockerfile (see `docker-compose-local.yml`). Changing them requires rebuilding the `nginx` service.

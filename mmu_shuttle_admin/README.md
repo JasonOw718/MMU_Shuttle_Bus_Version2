@@ -1,73 +1,59 @@
-# React + TypeScript + Vite
+# MMU Shuttle Admin
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Admin dashboard for the MMU Shuttle Bus platform. Built with **React + TypeScript + Vite**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Prerequisites
 
-## React Compiler
+- **Node.js** `>= 20.x` (LTS recommended)
+- **npm** `>= 10.x` (or `pnpm` / `yarn` if you prefer)
+- A running instance of the [`shuttle-backend`](../shuttle-backend) (REST + WebSocket endpoints)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 1. Environment Variables
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Create a `.env` file in this directory (`mmu_shuttle_admin/`) with the following keys:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+# Google Maps
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+VITE_GOOGLE_MAPS_ID=your_google_maps_id
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+> Vite only exposes variables prefixed with `VITE_` to the client bundle.
+> They are inlined at **build time**, so restart the dev server after changing them.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 2. Install Dependencies
+
+```bash
+npm install
 ```
+
+---
+
+## 3. Run the Dev Server
+
+```bash
+npm run dev
+```
+
+The app will be available at **http://localhost:5173** (Vite's default port).
+
+The dev server supports **Hot Module Replacement (HMR)** — edits to `.tsx`/`.ts`/`.css` files reload instantly.
+
+---
+
+## 4. Available Scripts
+
+| Command           | Description                                        |
+| ----------------- | -------------------------------------------------- |
+| `npm run dev`     | Start the Vite dev server with HMR                 |
+| `npm run build`   | Type-check (`tsc -b`) and produce a production build in `dist/` |
+| `npm run preview` | Serve the built `dist/` locally for smoke-testing  |
+| `npm run lint`    | Run ESLint over the project                        |
+
+---

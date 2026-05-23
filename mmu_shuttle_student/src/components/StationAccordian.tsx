@@ -65,9 +65,12 @@ const StationAccordian = ({ stations, activeBuses, isLoading, isError, errorMess
                             return !bus.isAtStation && hasLastVisited && bus.nextRouteStationId === station.id && bus.nextSequence == 1;
                         });
                         const stationBusIcons = (busesAtStation ?? []).map((bus) => ({ bus }));
+                        const etaBuses = activeBuses
+                            ?.filter((bus) => bus.lastVisitedRouteStationId !== station.id && bus.etas?.[station.id] != null)
+                            .sort((a, b) => a.etas[station.id] - b.etas[station.id]) ?? [];
 
                         return (
-                            <div key={station.sequence} className="relative flex items-start">
+                            <div key={station.id} className="relative flex items-start">
                                 {!isLast && (
                                     <div className="absolute left-[4px] top-[14px] bottom-0 w-[2px] bg-[#fbbf24]"></div>
                                 )}
@@ -129,7 +132,15 @@ const StationAccordian = ({ stations, activeBuses, isLoading, isError, errorMess
                                     >
                                         <div className="overflow-hidden">
                                             <div className="pt-2 pr-2">
-                                                {station.nextBusArrivalTime && <BusArrivalTimeCard time={station.nextBusArrivalTime} />}
+                                                {index !== 0 && etaBuses.length > 0 && (
+                                                    <BusArrivalTimeCard
+                                                        isLiveEta
+                                                        arrivals={etaBuses.map((bus) => ({
+                                                            busPlate: bus.busPlate,
+                                                            time: `${bus.etas[station.id]} min`
+                                                        }))}
+                                                    />
+                                                )}
                                                 <Schedule schedule={station.schedule} />
                                             </div>
                                         </div>

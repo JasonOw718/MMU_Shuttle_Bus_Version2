@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -20,4 +23,6 @@ public class ActiveBusModel {
     private String color;
     private boolean isAtStation;
     private Long lastVisitedRouteStationId;
+    private Map<Long, Integer> etas = new ConcurrentHashMap<>();
+    private long lastEtaCalculationTime = 0L;
 }

@@ -10,4 +10,6 @@ export interface ActiveBus {
     color: string;
     isAtStation: boolean;
     lastVisitedRouteStationId?: number;
+    etas: Record<number, number>;
+    lastEtaCalculationTime: number;
 }

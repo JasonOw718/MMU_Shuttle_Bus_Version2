@@ -33,3 +33,8 @@ secret:
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+google:
+  maps:
+    key: ${GOOGLE_API_KEY}
+    compute-routes-url: ${GOOGLE_COMPUTE_ROUTES_URL}

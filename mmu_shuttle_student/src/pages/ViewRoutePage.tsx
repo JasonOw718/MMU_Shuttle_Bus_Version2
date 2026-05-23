@@ -13,6 +13,7 @@ import SnackBar from "../components/SnackBar";
 import type { ActiveBus } from "../interfaces/models/ActiveBus";
 import { Bus, ArrowRight } from 'lucide-react';
 import { INDICATOR_COLOR } from "../shared/constants";
+import { mapActiveBusResponseToActiveBusModel } from "../shared/mappers";
 
 const ViewRoutePage = () => {
     const { id } = useParams();
@@ -50,20 +51,7 @@ const ViewRoutePage = () => {
         const onUpdate = (message: any) => {
             try {
                 const parsedData = JSON.parse(message.body);
-                const incomingBus: ActiveBus = {
-                    id: Number(parsedData.id),
-                    busPlate: parsedData.busPlate,
-                    location: {
-                        lat: Number(parsedData?.location?.latitude),
-                        lng: Number(parsedData?.location?.longitude)
-                    },
-                    nextSequence: Number(parsedData?.nextSequence),
-                    nextRouteStationId: Number(parsedData?.nextBusRouteStationId),
-                    active: Boolean(parsedData?.active),
-                    color: parsedData?.color,
-                    isAtStation: Boolean(parsedData?.isAtStation ?? parsedData?.atStation),
-                    lastVisitedRouteStationId: parsedData?.lastVisitedRouteStationId ?? undefined,
-                };
+                const incomingBus = mapActiveBusResponseToActiveBusModel(parsedData);
 
                 queryClient.setQueryData(['activeBuses', routeId], (oldData: ActiveBus[] = []) => {
                     if (!incomingBus.active) {

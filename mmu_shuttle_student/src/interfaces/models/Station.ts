@@ -5,6 +5,5 @@ export interface Station {
     name: string;
     sequence: number;
     schedule: string[];
-    nextBusArrivalTime?: string;
     location: Location;
 }

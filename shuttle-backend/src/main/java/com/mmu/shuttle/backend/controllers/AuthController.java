@@ -1,7 +1,6 @@
 package com.mmu.shuttle.backend.controllers;
 
 import com.mmu.shuttle.backend.models.DriverModel;
-import com.mmu.shuttle.backend.securities.DriverDetail;
 import com.mmu.shuttle.backend.models.LoginRequestModel;
 import com.mmu.shuttle.backend.services.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;

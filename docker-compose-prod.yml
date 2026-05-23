@@ -18,6 +18,8 @@ services:
       - LOKI_USER=${LOKI_USER}
       - LOKI_PASSWORD=${LOKI_PASSWORD}
       - SPRING_PROFILES_ACTIVE=prod
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_COMPUTE_ROUTES_URL=${GOOGLE_COMPUTE_ROUTES_URL}
       
     depends_on:
       postgres-db:

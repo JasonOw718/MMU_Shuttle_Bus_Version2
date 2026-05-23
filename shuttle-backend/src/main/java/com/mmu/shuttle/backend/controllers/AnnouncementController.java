@@ -64,8 +64,8 @@ public class AnnouncementController {
 
         } catch (FileException e) {
             throw e;
-        }catch (JsonProcessingException e) {
-            log.error(e.getMessage());
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse announcement request: {}", e);
             throw e;
         }
     }

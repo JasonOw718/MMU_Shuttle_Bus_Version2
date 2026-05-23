@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class BusLocationModel {
     Long routeId;
     LocationModel location;
+    Long vehicleId;
 
     // --- Debug Payload Metadata ---
     private Double speed;           // Used to verify if the bus is physically stationary

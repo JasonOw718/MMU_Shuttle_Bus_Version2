@@ -2,24 +2,21 @@ package com.mmu.shuttle.backend.services;
 
 import com.mmu.shuttle.backend.caches.ActiveBusStore;
 import com.mmu.shuttle.backend.caches.RouteCache;
-import com.mmu.shuttle.backend.entities.Route;
-import com.mmu.shuttle.backend.entities.RouteStation;
-import com.mmu.shuttle.backend.entities.Station;
 import com.mmu.shuttle.backend.entities.Vehicle;
+import com.mmu.shuttle.backend.models.RouteCacheModel;
+import com.mmu.shuttle.backend.models.RouteStationCacheModel;
 import com.mmu.shuttle.backend.exceptions.ResourceNotFoundException;
 import com.mmu.shuttle.backend.models.ActiveBusModel;
 import com.mmu.shuttle.backend.models.ActiveBusRequest;
 import com.mmu.shuttle.backend.models.BusLocationModel;
 import com.mmu.shuttle.backend.models.LocationModel;
 import com.mmu.shuttle.backend.repositories.VehicleRepository;
-import com.mmu.shuttle.backend.utils.GeoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class ActiveBusStoreService {
@@ -39,6 +36,12 @@ public class ActiveBusStoreService {
     @Autowired
     private VehicleRepository vehicleRepository;
 
+    @Autowired
+    private LocationProcessingService locationProcessingService;
+
+    @Autowired
+    private GoogleRouteRefreshSchedulerService googleRouteRefreshSchedulerService;
+
     public ActiveBusModel startRide(ActiveBusRequest activeBusRequest, Authentication authentication) {
         Long routeId = activeBusRequest.getRouteId();
 
@@ -57,16 +60,17 @@ public class ActiveBusStoreService {
 
         Long driverId = authService.getDriverIdFromAuth(authentication);
 
-        Route route = routeCache.getRoute(routeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Route with id " + routeId + " is not found in cache"));
+        RouteCacheModel route = routeCache.getRoute(routeId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Route with id " + routeId + " is not found in cache"));
 
         Long nextRouteStationId = route.getRouteStations().stream()
                 .filter(station -> 1 == station.getSequence())
                 .findFirst()
-                .map(RouteStation::getId)
+                .map(RouteStationCacheModel::getId)
                 .orElse(null);
 
-        if(nextRouteStationId == null){
+        if (nextRouteStationId == null) {
             throw new ResourceNotFoundException("Next Station is Unknown");
         }
 
@@ -77,7 +81,12 @@ public class ActiveBusStoreService {
 
         ActiveBusModel activeBusModel = activeBusStore.addActiveBus(routeId, busPlate, driverId, vehicleId,
                 locationModel.getLongitude(), locationModel.getLatitude(), nextRouteStationId);
+
+        locationProcessingService.updateGoogleRouteCache(routeId, activeBusModel);
+        locationProcessingService.calculateETA(routeId, activeBusModel);
         simpMessagingTemplate.convertAndSend("/routes/active_buses/" + routeId, activeBusModel);
+
+        googleRouteRefreshSchedulerService.scheduleGoogleRouteRefresh(routeId, activeBusModel);
         return activeBusModel;
     }
 
@@ -86,12 +95,17 @@ public class ActiveBusStoreService {
 
         ActiveBusModel activeBusModel = activeBusStore.removeActiveBus(routeId, driverId);
         if (activeBusModel != null) {
+            googleRouteRefreshSchedulerService.cancelGoogleRouteRefresh(activeBusModel.getId());
             simpMessagingTemplate.convertAndSend("/routes/active_buses/" + routeId, activeBusModel);
         }
     }
 
     public List<ActiveBusModel> getActiveBusesByRouteId(Long routeId) {
         return activeBusStore.getActiveBusesByRouteId(routeId);
+    }
+
+    public List<ActiveBusModel> getAllActiveBuses() {
+        return activeBusStore.getAllActiveBuses();
     }
 
     public void updateBusLocation(BusLocationModel busLocationModel, Authentication authentication) {
@@ -105,93 +119,10 @@ public class ActiveBusStoreService {
         if (activeBusModel == null)
             return;
 
-        Route route = routeCache.getRoute(routeId).orElse(null);
-        checkAndAdvanceStation(route, activeBusModel, newLocation);
+        RouteCacheModel route = routeCache.getRoute(routeId).orElse(null);
+        locationProcessingService.checkAndAdvanceStation(route, activeBusModel, newLocation);
+        locationProcessingService.calculateETA(routeId, activeBusModel);
         simpMessagingTemplate.convertAndSend("/routes/active_buses/" + routeId, activeBusModel);
-    }
-
-    private void checkAndAdvanceStation(Route route, ActiveBusModel activeBusModel, LocationModel newLocation) {
-        if (route == null || activeBusModel == null || activeBusModel.getNextBusRouteStationId() == null) {
-            return;
-        }
-
-        List<RouteStation> stations = route.getRouteStations();
-
-        if (activeBusModel.isAtStation() && activeBusModel.getLastVisitedRouteStationId() != null) {
-            RouteStation lastStation = stations.stream()
-                    .filter(rs -> rs.getStation() != null &&
-                            Objects.equals(rs.getId(), activeBusModel.getLastVisitedRouteStationId()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (lastStation != null) {
-                double distanceToLast = GeoUtils.calculateDistanceInMeters(
-                        newLocation.getLatitude(), newLocation.getLongitude(),
-                        lastStation.getStation().getLatitude(), lastStation.getStation().getLongitude()
-                );
-
-                if (distanceToLast > 50.0) {
-                    activeBusModel.setAtStation(false);
-                }
-            }
-        }
-
-        long currentExpectedSequence = activeBusModel.getNextSequence();
-
-        RouteStation physicallyReachedStation = null;
-        double minDistance = Double.MAX_VALUE;
-        long maxLookaheadSequence = currentExpectedSequence + 2;
-
-        for (RouteStation rs : stations) {
-            Station station = rs.getStation();
-            if (station != null && rs.getSequence() >= currentExpectedSequence && rs.getSequence() <= maxLookaheadSequence) {
-                double distance = GeoUtils.calculateDistanceInMeters(
-                        newLocation.getLatitude(), newLocation.getLongitude(),
-                        rs.getStation().getLatitude(), rs.getStation().getLongitude()
-                );
-
-                double allowedRadius = "FMD".equalsIgnoreCase(station.getName()) ? 100.0 : 50.0;
-
-                if (distance <= allowedRadius && distance < minDistance) {
-                    minDistance = distance;
-                    physicallyReachedStation = rs;
-                }
-            }
-        }
-
-        if (physicallyReachedStation != null) {
-
-            activeBusModel.setAtStation(true);
-            activeBusModel.setLastVisitedRouteStationId(physicallyReachedStation.getId());
-
-            long reachedSequence = physicallyReachedStation.getSequence();
-            int targetSequence = -1;
-
-            // Find the next available sequence number
-            for (RouteStation rs : stations) {
-                if (rs.getSequence() > reachedSequence) {
-                    if (targetSequence == -1 || rs.getSequence() < targetSequence) {
-                        targetSequence = rs.getSequence();
-                    }
-                }
-            }
-
-            activeBusModel.setNextSequence(targetSequence);
-
-            if (targetSequence == -1) {
-                activeBusModel.setNextBusRouteStationId(null);
-            } else {
-                Long targetRouteStationId = null;
-                for (RouteStation rs : stations) {
-                    if (rs.getSequence() == targetSequence) {
-                        targetRouteStationId = rs.getId();
-                        break;
-                    }
-                }
-                activeBusModel.setNextBusRouteStationId(targetRouteStationId);
-            }
-
-        }
     }
 
     public Long getDriverActiveBusRouteId(Authentication authentication) {
@@ -208,8 +139,8 @@ public class ActiveBusStoreService {
         return activeBusModel.getRouteId();
     }
 
-
     public void clearActiveBuses() {
+        googleRouteRefreshSchedulerService.cancelAllGoogleRouteRefresh();
         activeBusStore.resetAll();
     }
 }

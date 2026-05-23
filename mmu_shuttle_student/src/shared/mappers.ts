@@ -5,25 +5,24 @@ import type { ActiveBus } from "../interfaces/models/ActiveBus";
 
 export const mapRouteResponseToRouteModel = (apiData: any): Route => {
     return {
-        id: apiData.id,
-        routeName: apiData.name,
-        totalStations: apiData.totalStation,
-        isLive: apiData.live,
-        color: apiData.color,
+        id: apiData?.id,
+        routeName: apiData?.name,
+        totalStations: apiData?.totalStation,
+        isLive: apiData?.live,
+        color: apiData?.color,
 
-        stations: apiData.stationDetailResponse?.map((station: any): Station => ({
+        stations: apiData?.stationDetailResponse?.map((station: any): Station => ({
             id: station?.id,
             name: station?.name,
             sequence: station?.sequence,
             schedule: station?.schedules,
-            nextBusArrivalTime: station?.nextBusArrivalTime ?? undefined,
             location: {
                 lat: station?.locationModel?.latitude,
                 lng: station?.locationModel?.longitude
             }
         })) || [],
 
-        routeLine: apiData.routeLines?.map((line: any): Location => ({
+        routeLine: apiData?.routeLines?.map((line: any): Location => ({
             lat: line?.latitude,
             lng: line?.longitude
         })) || []
@@ -32,18 +31,25 @@ export const mapRouteResponseToRouteModel = (apiData: any): Route => {
 
 
 export const mapActiveBusResponseToActiveBusModel = (apiData: any): ActiveBus => {
+    const etas = Object.entries(apiData?.etas ?? {}).reduce((mappedEtas, [routeStationId, eta]) => {
+        mappedEtas[Number(routeStationId)] = Number(eta);
+        return mappedEtas;
+    }, {} as Record<number, number>);
+
     return {
-        id: apiData?.id,
+        id: Number(apiData?.id),
         busPlate: apiData?.busPlate,
         location: {
-            lat: apiData?.location?.latitude,
-            lng: apiData?.location?.longitude
+            lat: Number(apiData?.location?.latitude),
+            lng: Number(apiData?.location?.longitude)
         },
-        nextSequence: apiData?.nextSequence,
-        nextRouteStationId: apiData?.nextBusRouteStationId,
-        active: apiData?.active,
+        nextSequence: Number(apiData?.nextSequence),
+        nextRouteStationId: Number(apiData?.nextBusRouteStationId),
+        active: Boolean(apiData?.active),
         color: apiData?.color,
-        isAtStation: apiData?.atStation,
-        lastVisitedRouteStationId: apiData?.lastVisitedRouteStationId 
+        isAtStation: Boolean(apiData?.isAtStation ?? apiData?.atStation),
+        lastVisitedRouteStationId: apiData?.lastVisitedRouteStationId ?? undefined,
+        etas,
+        lastEtaCalculationTime: Number(apiData?.lastEtaCalculationTime ?? 0)
     };
 }

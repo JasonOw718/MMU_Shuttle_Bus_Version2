@@ -96,6 +96,12 @@ public class ActiveBusStore {
         return activeBuses.getOrDefault(routeId, new ArrayList<>());
     }
 
+    public List<ActiveBusModel> getAllActiveBuses() {
+        return activeBuses.values().stream()
+                .flatMap(List::stream)
+                .toList();
+    }
+
     public ActiveBusModel updateBusLocation(Long routeId, Long driverId, LocationModel newLocation) {
         List<ActiveBusModel> activeBusModels = activeBuses.get(routeId);
 

@@ -15,5 +15,4 @@ public class StationDetailResponse {
     private int sequence;
     private LocationModel locationModel;
     private List<String> schedules;
-    private String nextBusArrivalTime;
 }

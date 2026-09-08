@@ -5,7 +5,7 @@
 * [Traffic Analytics Report: May - June (PDF)](./docs/traffic-report-may-june.pdf)
 * [Traffic Analytics Report: June - July (PDF)](./docs/traffic-report-june-july.pdf)
 
-**🎥 System & Traffic Overview Video**
+**🎥 System Demo Video**
 
 [![Watch the Traffic Analytics Overview](https://img.youtube.com/vi/Yzq--6C2qok/maxresdefault.jpg)](https://youtu.be/Yzq--6C2qok)
 
